@@ -11,7 +11,5 @@ add_executable (${PROJECT_NAME}
 target_include_directories (ARC PRIVATE include)
 
 target_compile_options (${PROJECT_NAME} PRIVATE
-    -Wall
-    -Wextra
-    -Wpedantic
-)
+    $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>: -Wall -Wextra -Wpedantic>
+    $<$<CXX_COMPILER_ID:MSVC>: /W4 /WX>)
