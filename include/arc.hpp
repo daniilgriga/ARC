@@ -189,6 +189,30 @@ public:
         control_ghost_sizes();                                  // 7. check size of ghost lists
     }
 
+    bool get (const KeyT& key, T& value)
+    {
+        auto t1_iter = t1_map_.find (key);
+        if (t1_iter != t1_map_.end())
+        {
+            value = t1_iter->second->second;
+            move_from_T1_to_T2 (key, value);
+            return true;
+        }
+
+        auto t2_iter = t2_map_.find (key);
+        if (t2_iter != t2_map_.end())
+        {
+            value = t2_iter->second->second;
+            t2_list_.erase (t2_iter->second);
+            t2_list_.push_front ({key, value});
+            t2_map_[key] = t2_list_.begin();
+
+            return true;
+        }
+
+        return false;
+    }
+
     void dump ()
     {
         std::cout << std::endl;
@@ -263,5 +287,4 @@ public:
 
         std::cout << "======================================================" << std::endl;
     }
-
 };
