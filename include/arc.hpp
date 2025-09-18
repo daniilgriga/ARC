@@ -72,12 +72,16 @@ class ARC_t
     {
         if (hit_in_B1)
         {
-            size_t delta = std::max<size_t>(1, b2_list_.size() / b1_list_.size());
+            size_t delta = 1;
+            if (b1_list_.size() > 0)
+                delta = std::max<size_t>(1, b2_list_.size() / b1_list_.size());
             param_ = std::min(param_ + delta, size_);
         }
         else
         {
-            size_t delta = std::max<size_t>(1, b1_list_.size() / b2_list_.size());
+            size_t delta = 1;
+            if (b2_list_.size() > 0)
+                delta = std::max<size_t>(1, b1_list_.size() / b2_list_.size());
             param_ = std::max(param_ - delta, size_t{0});
         }
     }
@@ -122,6 +126,29 @@ class ARC_t
         }
     }
 
+    void handling_b1 (KeyT key)
+    {
+        update_param (true);
+        auto iter = b1_map_.find (key);
+        if (iter != b1_map_.end())
+        {
+            b1_list_.erase (iter->second);
+            b1_map_.erase (iter);
+        }
+    }
+
+    void handling_b2 (KeyT key)
+    {
+        update_param (false);
+        auto iter = b2_map_.find (key);
+        if (iter != b2_map_.end())
+        {
+            b2_list_.erase (iter->second);
+            b2_map_.erase (iter);
+        }
+    }
+
+
 public:
     ARC_t (size_t size) : size_(size), param_(0) {};            // ctor
 
@@ -142,16 +169,24 @@ public:
             return;
         }
 
-        if (T_size() >= size_)                                  // 3. cache is full?
+        bool exist_b1 = b1_map_.count (key);                    // 3. check ghost lists
+        bool exist_b2 = b2_map_.count (key);
+
+        if (exist_b1)                                           // 4. ghost hit handling
+            handling_b1 (key);
+        else if (exist_b2)
+            handling_b2 (key);
+
+        if (T_size() >= size_)                                  // 5. cache is full?
         {
             std::cout << "Cache is full --- need replace" << std::endl;
             replace();
         }
 
-        t1_list_.push_front ({key, value});                     // 4. added to T1
+        t1_list_.push_front ({key, value});                     // 6. added to T1
         t1_map_[key] = t1_list_.begin();
 
-        control_ghost_sizes();                                  // 5. check size of ghost lists
+        control_ghost_sizes();                                  // 7. check size of ghost lists
     }
 
     void dump ()
@@ -206,7 +241,7 @@ public:
             for (auto it = b1_list_.begin(); it != b1_list_.end(); ++it)
             {
                 const auto& key = *it;
-                std::cout << "    " << idx++ << ". key = " << std::setw(5) << key << "\"" << std::endl;
+                std::cout << "    " << idx++ << ". key = " << std::setw(5) << key << std::endl;
             }
         }
 
@@ -222,7 +257,7 @@ public:
             for (auto it = b2_list_.begin(); it != b2_list_.end(); ++it)
             {
                 const auto& key = *it;
-                std::cout << "    " << idx++ << ". key = " << std::setw(5) << key << "\"" << std::endl;
+                std::cout << "    " << idx++ << ". key = " << std::setw(5) << key << std::endl;
             }
         }
 
