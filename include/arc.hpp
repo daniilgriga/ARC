@@ -148,11 +148,7 @@ class ARC_t
         }
     }
 
-
-public:
-    ARC_t (size_t size) : size_(size), param_(0) {};            // ctor
-
-    void put (KeyT key, T value)
+    void put_without_ghosts_check (KeyT key, T value)
     {
         if (t1_map_.count (key))                                // 1. check T1
         {
@@ -167,26 +163,34 @@ public:
             t2_list_.push_front ({key, value});
             t2_map_[key] = t2_list_.begin();
             return;
+        }                                                       // --- remove ghost lists checks
+
+        if (T_size() >= size_)                                  // 3. cache is full?
+        {
+            // std::cout << "Cache is full --- need replace" << std::endl;
+            replace();
         }
 
-        bool exist_b1 = b1_map_.count (key);                    // 3. check ghost lists
+        t1_list_.push_front ({key, value});                     // 4. added to T1
+        t1_map_[key] = t1_list_.begin();
+
+        control_ghost_sizes();                                  // 5. check size of ghost lists
+    }
+
+public:
+    ARC_t (size_t size) : size_(size), param_(0) {};            // ctor
+
+    void put (KeyT key, T value)
+    {
+        bool exist_b1 = b1_map_.count (key);
         bool exist_b2 = b2_map_.count (key);
 
-        if (exist_b1)                                           // 4. ghost hit handling
+        if (exist_b1)
             handling_b1 (key);
         else if (exist_b2)
             handling_b2 (key);
 
-        if (T_size() >= size_)                                  // 5. cache is full?
-        {
-            std::cout << "Cache is full --- need replace" << std::endl;
-            replace();
-        }
-
-        t1_list_.push_front ({key, value});                     // 6. added to T1
-        t1_map_[key] = t1_list_.begin();
-
-        control_ghost_sizes();                                  // 7. check size of ghost lists
+        put_without_ghosts_check (key, value);
     }
 
     bool get (const KeyT& key, T& value)
@@ -209,6 +213,41 @@ public:
 
             return true;
         }
+
+        return false;
+    }
+
+    template <typename FuncT>
+    bool lookup_update (const KeyT& key, FuncT get_page)
+    {
+        if (t1_map_.count(key))
+        {
+            T value = t1_map_[key]->second;
+            move_from_T1_to_T2 (key, value);
+
+            return true;
+        }
+
+        if (t2_map_.count(key))
+        {
+            T value = t2_map_[key]->second;
+            t2_list_.erase (t2_map_[key]);
+            t2_list_.push_front ({key, value});
+            t2_map_[key] = t2_list_.begin();
+
+            return true;
+        }
+
+        bool exist_b1 = b1_map_.count (key);
+        bool exist_b2 = b2_map_.count (key);
+
+        if (exist_b1)
+            handling_b1 (key);
+        else if (exist_b2)
+            handling_b2 (key);
+
+        T value = get_page (key);
+        put_without_ghosts_check (key, value);
 
         return false;
     }
