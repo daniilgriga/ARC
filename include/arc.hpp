@@ -98,10 +98,10 @@ class ARC_t
 
     void move_from_T1_to_T2 (KeyT key, T value)
     {
-        auto T1_iter = t1_map_.find (key);                   // T1_iter (std::unordered_map<KeyT, ListIter>::iterator)
+        auto T1_iter = t1_map_.find (key);                      // T1_iter (std::unordered_map<KeyT, ListIter>::iterator)
         if (T1_iter != t1_map_.end())
         {
-            t1_list_.erase (T1_iter->second);                // T1_iter->second (list<...>::iterator)
+            t1_list_.erase (T1_iter->second);                   // T1_iter->second (list<...>::iterator)
             t1_map_.erase (T1_iter);
         }
 
@@ -163,7 +163,7 @@ class ARC_t
             t2_list_.push_front ({key, value});
             t2_map_[key] = t2_list_.begin();
             return;
-        }                                                       // --- remove ghost lists checks
+        }
 
         if (T_size() >= size_)                                  // 3. cache is full?
         {
@@ -180,6 +180,7 @@ class ARC_t
 public:
     ARC_t (size_t size) : size_(size), param_(0) {};            // ctor
 
+// ====== Methods for completeness of the user interface =====
     void put (KeyT key, T value)
     {
         bool exist_b1 = b1_map_.count (key);
@@ -216,11 +217,12 @@ public:
 
         return false;
     }
+// ===========================================================
 
     template <typename FuncT>
     bool lookup_update (const KeyT& key, FuncT get_page)
     {
-        if (t1_map_.count(key))
+        if (t1_map_.count(key))                                 // HIT
         {
             T value = t1_map_[key]->second;
             move_from_T1_to_T2 (key, value);
@@ -228,7 +230,7 @@ public:
             return true;
         }
 
-        if (t2_map_.count(key))
+        if (t2_map_.count(key))                                 // HIT
         {
             T value = t2_map_[key]->second;
             t2_list_.erase (t2_map_[key]);
@@ -238,7 +240,7 @@ public:
             return true;
         }
 
-        bool exist_b1 = b1_map_.count (key);
+        bool exist_b1 = b1_map_.count (key);                    // MISS
         bool exist_b2 = b2_map_.count (key);
 
         if (exist_b1)
@@ -252,7 +254,7 @@ public:
         return false;
     }
 
-    void dump ()
+    void dump ()                                                // just for visualisation of cache
     {
         std::cout << std::endl;
         std::cout << "======================================================" << std::endl;
@@ -293,7 +295,7 @@ public:
             }
         }
 
-        std::cout << "######## B1 (ghosts from T1, size = " << b1_size() << ") ########" << std::endl;
+        std::cout << "######## B1 (ghosts from T1, size = " << b1_size() << ")  ########" << std::endl;
         if (b1_list_.empty())
         {
             std::cout << "\t\t   [empty]" << std::endl;
@@ -309,7 +311,7 @@ public:
         }
 
 
-        std::cout << "######## B2 (ghosts from T2, size = " << b2_size() << ") ########" << std::endl;
+        std::cout << "######## B2 (ghosts from T2, size = " << b2_size() << ")  ########" << std::endl;
         if (b2_list_.empty())
         {
             std::cout << "\t\t   [empty]" << std::endl;
