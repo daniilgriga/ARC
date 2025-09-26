@@ -41,6 +41,8 @@ public:
     template <typename FuncT>
     bool lookup_update (const KeyT& key, FuncT get_page)
     {
+        size_t curr_pos = curr_position_++;
+
         if (cache_.find (key) != cache_.end())
             return true;                                                        // HIT
 
@@ -57,7 +59,7 @@ public:
         {
             const KeyT& key_in_cache = iter->first;
 
-            int next_position = find_next_occurrence (key, curr_position_);
+            int next_position = find_next_occurrence (key_in_cache, curr_pos);
             if (next_position == NO_NEXT_)
             {
                 key_for_evict = key_in_cache;
