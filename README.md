@@ -7,3 +7,17 @@
 The Adaptive Replacement Cache (ARC) is a caching algorithm designed to balance
 **recency** (recently accessed items) and **frequency** (frequently accessed items) adaptively
 without explicitly storing frequency counters.
+
+# How to install and build
+
+```bash
+git clone https://github.com/daniilgriga/ARC.git
+cd ARC
+
+mkdir build
+cmake -S . -B build
+cmake --build build
+
+./build/ideal   # to run ideal cache
+./build/arc     # to run  arc  cache
+```
