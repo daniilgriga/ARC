@@ -3,38 +3,31 @@
 
 int main ()
 {
-    std::cout << "Ideal cache starting..." << std::endl;
+    size_t cache_size = 0;
+    std::cin >> cache_size;
 
-    IdealCache_t<Page_t, int> cache (2);
+    size_t numb_items = 0;
+    std::cin >> numb_items;
 
-    std::vector<int> sequence = {1, 2, 3, 4, 3, 2, 1};
-    cache.set_sequence (sequence);
+    IdealCache_t<Page_t, int> cache (cache_size);
+
+    int key = 0;
+    std::vector<int> vec = {};
+
+    for (size_t i = 0; i < numb_items; i++)
+    {
+        std::cin >> key;
+        vec.push_back (key);
+    }
+
+    cache.set_sequence (vec);
 
     int hits = 0;
 
-    int key =  1;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
+    for (size_t i = 0; i < numb_items; i++)
+        if (cache.lookup_update (vec[i], slow_get_page)) hits++;
 
-    key = 2;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-
-    key = 3;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-
-    key = 4;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-
-    key = 3;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-
-    key = 2;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-
-    key = 1;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-
-    std::cout << "Ideal cache ending..." << std::endl;
-    std::cout << "Hits: " << hits << std::endl;
+    std::cout << hits << std::endl;
 
     return 0;
 }

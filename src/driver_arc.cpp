@@ -1,43 +1,32 @@
+#include <vector>
 #include <arc.hpp>
 #include <page.hpp>
 
 int main ()
 {
-    std::cout << "ARC starting..." << std::endl;
+    size_t cache_size = 0;
+    std::cin >> cache_size;
 
-    ARC_t<Page_t, int> cache(5);
+    size_t numb_items = 0;
+    std::cin >> numb_items;
+
+    ARC_t<Page_t, int> cache (cache_size);
+
+    int key = 0;
+    std::vector<int> vec = {};
+
+    for (size_t i = 0; i < numb_items; i++)
+    {
+        std::cin >> key;
+        vec.push_back (key);
+    }
 
     int hits = 0;
-    int key =  1;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-    cache.dump();
 
-    key = 2;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-    cache.dump();
+    for (size_t i = 0; i < numb_items; i++)
+        if (cache.lookup_update (vec[i], slow_get_page)) hits++;
 
-    key = 3;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-    cache.dump();
-
-    key = 4;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-    cache.dump();
-
-    key = 3;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-    cache.dump();
-
-    key = 2;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-    cache.dump();
-
-    key = 1;
-    if (cache.lookup_update (key, slow_get_page)) hits++;
-    cache.dump();
-
-    std::cout << "ARC ending..." << std::endl;
-    std::cout << "Hits: " << hits << std::endl;
+    std::cout << hits << std::endl;
 
     return 0;
 }
