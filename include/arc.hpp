@@ -82,7 +82,10 @@ class ARC_t
             size_t delta = 1;
             if (b2_list_.size() > 0)
                 delta = std::max<size_t>(1, b1_list_.size() / b2_list_.size());
-            param_ = std::max(param_ - delta, size_t{0});
+            if (param_ >= delta)                                // fixed overflow bug
+                param_ -= delta;
+            else
+                param_ = 0;
         }
     }
 
