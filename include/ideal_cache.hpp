@@ -28,7 +28,14 @@ class IdealCache_t
     }
 
 public:
-    IdealCache_t (size_t size) : size_(size), curr_position_(0) {}
+    IdealCache_t (int size)
+    {
+        if (size < 0)
+            throw std::invalid_argument ("Cache size cannot be negative");
+
+        size_ = static_cast<size_t>(size);
+        curr_position_ = 0;
+    }
 
     void set_sequence (const std::vector<KeyT>& sequence)
     {
@@ -41,6 +48,9 @@ public:
     template <typename FuncT>
     bool lookup_update (const KeyT& key, FuncT get_page)
     {
+        if (size_ == 0)
+            return false;
+
         size_t curr_pos = curr_position_++;
 
         if (cache_.find (key) != cache_.end())

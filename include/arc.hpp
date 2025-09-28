@@ -181,7 +181,14 @@ class ARC_t
     }
 
 public:
-    ARC_t (size_t size) : size_(size), param_(0) {};            // ctor
+    ARC_t (int size)                                             // ctor
+    {
+        if (size < 0)
+            throw std::invalid_argument ("Cache size cannot be negative");
+
+        size_ = static_cast<size_t>(size);
+        param_ = 0;
+    }
 
 // ====== Methods for completeness of the user interface =====
     void put (KeyT key, T value)
@@ -225,6 +232,9 @@ public:
     template <typename FuncT>
     bool lookup_update (const KeyT& key, FuncT get_page)
     {
+        if (size_ == 0)
+            return false;
+
         if (t1_map_.count(key))                                 // HIT
         {
             T value = t1_map_[key]->second;
