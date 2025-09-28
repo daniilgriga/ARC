@@ -2,22 +2,33 @@
 ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 
-# ARC (Adaptive Replacement Cache)
+# Adaptive Replacement Cache (ARC) && Optimal Cache Replacement Algorithm (OPT)
 
-The Adaptive Replacement Cache (ARC) is a caching algorithm designed to balance
+## Project idea
+
+The **Adaptive Replacement Cache (ARC)** is a caching algorithm designed to balance
 **recency** (recently accessed items) and **frequency** (frequently accessed items) adaptively
 without explicitly storing frequency counters.
 
-# How to install and build
+The **Optimal Cache Replacement Algorithm** (also known as **Belady’s algorithm**) is a theoretical cache eviction strategy that achieves the minimum possible number of page faults (or, equivalently, the maximum number of cache hits) for a given cache size and request sequence.
+
+It works by looking into the future: when a cache miss occurs and the cache is full, it evicts the page that will not be used for the longest time in the future (or will never be used again).
+
+> [!NOTE] **OPT** is not implementable in real systems because it requires knowledge of future requests. ? > However, it serves as a gold standard for evaluating the performance of practical cache algorithms (like *LRU*, *ARC*, etc.).
+
+In this project, the **OPT** cache is used as a benchmark to measure how close adaptive algorithms (e.g., **ARC**) come to the theoretical optimum.
+
+# How to install
 
 ```bash
 git clone https://github.com/daniilgriga/ARC.git
 cd ARC
+```
 
+# How to build
+
+```bash
 mkdir build
 cmake -S . -B build
 cmake --build build
-
-./build/ideal   # to run ideal cache
-./build/arc     # to run  arc  cache
 ```
