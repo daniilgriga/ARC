@@ -56,9 +56,15 @@ public:
         if (cache_.find (key) != cache_.end())
             return true;                                                        // HIT
 
+        T page = get_page (key);
+
+        int next_for_new = find_next_occurrence (key, curr_pos);
+        if (next_for_new == NO_NEXT_)
+            return false;
+
         if (cache_.size() < size_)
         {
-            cache_.try_emplace (key, get_page (key));
+            cache_.try_emplace (key, page);
             return false;                                                       // MISS
         }
 
@@ -84,7 +90,7 @@ public:
         }
 
         cache_.erase (key_for_evict);
-        cache_.try_emplace (key, get_page (key));
+        cache_.try_emplace (key, page);
 
         return false;
     }
