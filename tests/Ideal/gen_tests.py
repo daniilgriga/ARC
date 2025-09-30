@@ -1,23 +1,23 @@
 import os
 import random
+from collections import defaultdict
+import heapq
 
-def simulate_optimal_hits_fast (cache_size, requests):
+def simulate_optimal_hits (cache_size, requests):
     if cache_size == 0:
         return 0
     n = len (requests)
     if n == 0:
         return 0
 
-    # find_next_occurrence
-    next_use = [10**9] * n
-    last_occurrence = {}
-    for i in range (n - 1, -1, -1):
-        key = requests[i]
-        if key in last_occurrence:
-            next_use[i] = last_occurrence[key]
-        last_occurrence[key] = i
+    positions = defaultdict (list)
+    for i in range (n):
+        positions[requests[i]].append (i)
 
     cache = set()
+    next_iter = defaultdict (int)
+    heap = []
+    tie = 0
     hits = 0
 
     for i in range (n):
@@ -25,48 +25,38 @@ def simulate_optimal_hits_fast (cache_size, requests):
         if key in cache:
             hits += 1
         else:
+            it = next_iter[key]
+            while it < len (positions[key]) and positions[key][it] <= i:
+                it += 1
+            if it >= len (positions[key]):
+                continue
+            next_for_new = positions[key][it]
+
             if len (cache) >= cache_size:
-                victim = None
-                furthest = -1
-                for page in cache:
-                    next_idx = 10**9
-                    for j in range (i + 1, n):
-                        if requests[j] == page:
-                            next_idx = j
-                            break
-                    if next_idx > furthest:
-                        furthest = next_idx
-                        victim = page
-                cache.remove (victim)
+                evicted = False
+                while heap and not evicted:
+                    neg_time, t, k = heapq.heappop (heap)
+                    if k not in cache:
+                        continue
+                    curr_it = next_iter[k]
+                    curr_next = 10**9 + 1 if curr_it >= len (positions[k]) else positions[k][curr_it]
+                    if -neg_time == curr_next:
+                        cache.remove (k)
+                        evicted = True
+
             cache.add (key)
-    return hits
+            next_iter[key] = it
+            heapq.heappush (heap, (-next_for_new, tie, key))
+            tie += 1
 
-def simulate_optimal_hits (cache_size, requests):
-    if cache_size == 0:
-        return 0
+        it = next_iter[key]
+        while it < len (positions[key]) and positions[key][it] <= i:
+            it += 1
+        next_iter[key] = it
+        next_t = 10**9 + 1 if it >= len (positions[key]) else positions[key][it]
+        heapq.heappush (heap, (-next_t, tie, key))
+        tie += 1
 
-    cache = set()
-    hits = 0
-    n = len (requests)
-
-    for i, key in enumerate (requests):
-        if key in cache:
-            hits += 1
-        else:
-            if len (cache) >= cache_size:
-                victim = None
-                furthest = -1
-                for page in cache:
-                    next_use = 10**9
-                    for j in range (i + 1, n):
-                        if requests[j] == page:
-                            next_use = j
-                            break
-                    if next_use > furthest:
-                        furthest = next_use
-                        victim = page
-                cache.remove (victim)
-            cache.add (key)
     return hits
 
 def generate_phase_requests (phases, phase_size, key_range):
@@ -139,10 +129,41 @@ def main ():
     test_cases.append ((20, [random.randint (1, 100) for _ in range (1500)]))
     test_cases.append ((30, [random.randint (1, 200) for _ in range (2000)]))
 
-    for i, (size, reqs) in enumerate (test_cases, 1):
-        write_test(i, size, reqs, folder = ".")
+    for i in range(5):
+        seed = 2025 + i
+        random.seed(seed)
 
-    print (f"Generated {len(test_cases)} tests in Ideal/ (001.dat to {len(test_cases):03d}.dat)")
+        if i == 0:
+            cache_size = 120000
+            n = 400000
+            reqs = [random.randint (1, 500000) for _ in range(n)]
+
+        elif i == 1:
+            cache_size = 100000
+            n = 350000
+            reqs = [random.randint (1, 450000) for _ in range(n)]
+
+        elif i == 2:
+            cache_size = 130000
+            n = 450000
+            reqs = [random.randint (1, 550000) for _ in range(n)]
+
+        elif i == 3:
+            cache_size = 110000
+            n = 400000
+            reqs = generate_bursty_requests (total=n, burst_prob=0.05, common_keys=10000, rare_keys=500000)
+
+        elif i == 4:
+            cache_size = 140000
+            n = 420000
+            reqs = generate_phase_requests (phases=20, phase_size=n//20, key_range=25000)
+
+        test_cases.append ((cache_size, reqs))
+
+    for i, (size, reqs) in enumerate (test_cases, 1):
+        write_test (i, size, reqs, folder = ".")
+
+    print (f"Generated {len(test_cases)} tests (001.dat to {len(test_cases):03d}.dat)")
 
 if __name__ == "__main__":
     main()
