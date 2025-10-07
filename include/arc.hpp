@@ -40,32 +40,29 @@ class ARC_t
     size_t T_size()  const { return t1_size() + t2_size(); }    // T = T1 + T2
     size_t B_size()  const { return b1_size() + b2_size(); }    // B = B1 + B2
 
-    void evict_from_T1_to_B1 ()
+    void evict_from_T_to_B (std::list<ListNodeType>& t_list, std::unordered_map<KeyT, ListIter>&      t_map,
+                            std::list<KeyT>&         b_list, std::unordered_map<KeyT, ListIter_KeyT>& b_map)
     {
-        if (t1_list_.empty()) return;
+        if (t_list.empty()) return;
 
-        auto iter = --t1_list_.end();
+        auto iter = --t_list.end();
         KeyT key = iter->first;
 
-        t1_map_.erase (key);
-        t1_list_.erase (iter);
+        t_map.erase (key);
+        t_list.erase (iter);
 
-        b1_list_.push_front (key);
-        b1_map_[key] = b1_list_.begin();
+        b_list.push_front (key);
+        b_map[key] = b_list.begin();
+    }
+
+    void evict_from_T1_to_B1 ()
+    {
+        evict_from_T_to_B (t1_list_, t1_map_, b1_list_, b1_map_);
     }
 
     void evict_from_T2_to_B2 ()
     {
-        if (t2_list_.empty()) return;
-
-        auto iter = --t2_list_.end();
-        KeyT key = iter->first;
-
-        t2_map_.erase (key);
-        t2_list_.erase (iter);
-
-        b2_list_.push_front (key);
-        b2_map_[key] = b2_list_.begin();
+        evict_from_T_to_B (t2_list_, t2_map_, b2_list_, b2_map_);
     }
 
     void update_param (bool hit_in_B1)
