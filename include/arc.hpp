@@ -5,6 +5,7 @@
 #include <list>
 #include <cstddef>
 #include <iomanip>
+#include <cassert>
 
 template <typename T, typename KeyT = int>
 class ARC_t
@@ -65,25 +66,23 @@ class ARC_t
         evict_from_T_to_B (t2_list_, t2_map_, b2_list_, b2_map_);
     }
 
-    void update_param (bool hit_in_B1)
+    void handle_with_b1 ()
     {
-        if (hit_in_B1)
-        {
-            size_t delta = 1;
-            if (b1_list_.size() > 0)
-                delta = std::max<size_t>(1, b2_list_.size() / b1_list_.size());
-            param_ = std::min(param_ + delta, size_);
-        }
+        size_t delta = 1;
+        if (b1_list_.size() > 0)
+            delta = std::max<size_t>(1, b2_list_.size() / b1_list_.size());
+        param_ = std::min(param_ + delta, size_);
+    }
+
+    void handle_with_b2 ()
+    {
+        size_t delta = 1;
+        if (b2_list_.size() > 0)
+            delta = std::max<size_t>(1, b1_list_.size() / b2_list_.size());
+        if (param_ >= delta)
+            param_ -= delta;
         else
-        {
-            size_t delta = 1;
-            if (b2_list_.size() > 0)
-                delta = std::max<size_t>(1, b1_list_.size() / b2_list_.size());
-            if (param_ >= delta)                                // fixed overflow bug
-                param_ -= delta;
-            else
-                param_ = 0;
-        }
+            param_ = 0;
     }
 
     void replace ()
@@ -96,7 +95,7 @@ class ARC_t
             evict_from_T1_to_B1 ();
     }
 
-    void move_from_T1_to_T2 (KeyT key, T value)
+    void move_from_T1_to_T2 (const KeyT& key, const T& value)
     {
         auto T1_iter = t1_map_.find (key);                      // T1_iter (std::unordered_map<KeyT, ListIter>::iterator)
         if (T1_iter != t1_map_.end())
@@ -126,29 +125,18 @@ class ARC_t
         }
     }
 
-    void handling_b1 (KeyT key)
+    void handling_b_list (const KeyT& key, std::list<KeyT>& b_list, std::unordered_map<KeyT, ListIter_KeyT>& b_map, void (ARC_t::*handling_b_func)())
     {
-        update_param (true);
-        auto iter = b1_map_.find (key);
-        if (iter != b1_map_.end())
+        (this->*handling_b_func) ();
+        auto iter = b_map.find (key);
+        if (iter != b_map.end())
         {
-            b1_list_.erase (iter->second);
-            b1_map_.erase (iter);
+            b_list.erase (iter->second);
+            b_map.erase (iter);
         }
     }
 
-    void handling_b2 (KeyT key)
-    {
-        update_param (false);
-        auto iter = b2_map_.find (key);
-        if (iter != b2_map_.end())
-        {
-            b2_list_.erase (iter->second);
-            b2_map_.erase (iter);
-        }
-    }
-
-    void put_without_ghosts_check (KeyT key, T value)
+    void put_without_ghosts_check (const KeyT& key, const T& value)
     {
         if (t1_map_.count (key))                                // 1. check T1
         {
@@ -180,23 +168,22 @@ class ARC_t
 public:
     ARC_t (int size)                                             // ctor
     {
-        if (size < 0)
-            throw std::invalid_argument ("Cache size cannot be negative");
+        assert (size && "Cache size cannot be negative");
 
         size_ = static_cast<size_t>(size);
         param_ = 0;
     }
 
 // ====== Methods for completeness of the user interface =====
-    void put (KeyT key, T value)
+    void put (const KeyT& key, T& value)
     {
         bool exist_b1 = b1_map_.count (key);
         bool exist_b2 = b2_map_.count (key);
 
         if (exist_b1)
-            handling_b1 (key);
+            handling_b_list (key, b1_list_, b1_map_, &ARC_t::handle_with_b1);
         else if (exist_b2)
-            handling_b2 (key);
+            handling_b_list (key, b2_list_, b2_map_, &ARC_t::handle_with_b2);
 
         put_without_ghosts_check (key, value);
     }
@@ -254,9 +241,9 @@ public:
         bool exist_b2 = b2_map_.count (key);
 
         if (exist_b1)
-            handling_b1 (key);
+            handling_b_list (key, b1_list_, b1_map_, &ARC_t::handle_with_b1);
         else if (exist_b2)
-            handling_b2 (key);
+            handling_b_list (key, b2_list_, b2_map_, &ARC_t::handle_with_b2);
 
         T value = get_page (key);
         put_without_ghosts_check (key, value);
