@@ -1,30 +1,17 @@
-#include <vector>
-#include <arc.hpp>
-#include <page.hpp>
+#include "arc.hpp"
+#include "page.hpp"
+#include "driver.hpp"
 
 int main ()
 {
-    size_t cache_size = 0;
-    std::cin >> cache_size;
+    auto input_data = read_input();
 
-    size_t numb_items = 0;
-    std::cin >> numb_items;
-
-    ARC_t<Page_t, int> cache (cache_size);
-
-    int key = 0;
-    std::vector<int> vec = {};
-
-    for (size_t i = 0; i < numb_items; i++)
-    {
-        std::cin >> key;
-        vec.push_back (key);
-    }
+    ARC_t<Page_t, int> cache (input_data.cache_size);
 
     int hits = 0;
 
-    for (size_t i = 0; i < numb_items; i++)
-        if (cache.lookup_update (vec[i], slow_get_page)) hits++;
+    for (int key : input_data.sequence)
+        if (cache.lookup_update (key, slow_get_page)) hits++;
 
     std::cout << hits << std::endl;
 
