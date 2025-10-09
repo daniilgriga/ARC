@@ -108,21 +108,20 @@ class ARC_t
         t2_map_[key] = t2_list_.begin();
     }
 
+    void remove_excess_elems (std::list<ListNodeType>& t_list, std::list<KeyT>& b_list, std::unordered_map<KeyT, ListIter_KeyT>& b_map)
+    {
+        while (t_list.size() + b_list.size() > size_)
+        {
+            auto iter = b_list.back();
+            b_map.erase (iter);
+            b_list.pop_back();
+        }
+    }
+
     void control_ghost_sizes ()
     {
-        while (L1_size() > size_)
-        {
-            auto iter = b1_list_.back();
-            b1_map_.erase (iter);
-            b1_list_.pop_back();
-        }
-
-        while (L2_size() > size_)
-        {
-            auto iter = b2_list_.back();
-            b2_map_.erase (iter);
-            b2_list_.pop_back();
-        }
+        remove_excess_elems (t1_list_, b1_list_, b1_map_);
+        remove_excess_elems (t2_list_, b2_list_, b2_map_);
     }
 
     void handling_b_list (const KeyT& key, std::list<KeyT>& b_list, std::unordered_map<KeyT, ListIter_KeyT>& b_map, void (ARC_t::*handling_b_func)())

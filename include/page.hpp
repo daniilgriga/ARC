@@ -6,8 +6,6 @@ struct Page_t
 {
     int page_id_;
     std::string data_;
-
-    Page_t (int id, const std::string& data) : page_id_(id), data_(data) {}
 };
 
 inline std::ostream& operator<< (std::ostream& ostream, const Page_t& page)
