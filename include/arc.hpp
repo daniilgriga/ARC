@@ -177,23 +177,20 @@ public:
 // ====== Methods for completeness of the user interface =====
     void put (const KeyT& key, T& value)
     {
-        bool exist_b1 = b1_map_.count (key);
-        bool exist_b2 = b2_map_.count (key);
-
-        if (exist_b1)
+        if (b1_map_.count (key))
             handling_b_list (key, b1_list_, b1_map_, &ARC_t::handle_with_b1);
-        else if (exist_b2)
+        else if (b2_map_.count (key))
             handling_b_list (key, b2_list_, b2_map_, &ARC_t::handle_with_b2);
 
         put_without_ghosts_check (key, value);
     }
 
-    bool get (const KeyT& key, T& value)
+    bool get (const KeyT& key)
     {
         auto t1_iter = t1_map_.find (key);
         if (t1_iter != t1_map_.end())
         {
-            value = t1_iter->second->second;
+            T value = t1_iter->second->second;
             move_from_T1_to_T2 (key, value);
             return true;
         }
@@ -201,7 +198,7 @@ public:
         auto t2_iter = t2_map_.find (key);
         if (t2_iter != t2_map_.end())
         {
-            value = t2_iter->second->second;
+            T value = t2_iter->second->second;
             t2_list_.erase (t2_iter->second);
             t2_list_.push_front ({key, value});
             t2_map_[key] = t2_list_.begin();
@@ -219,30 +216,12 @@ public:
         if (size_ == 0)
             return false;
 
-        if (t1_map_.count(key))                                 // HIT
-        {
-            T value = t1_map_[key]->second;
-            move_from_T1_to_T2 (key, value);
-
+        if (get (key))
             return true;
-        }
 
-        if (t2_map_.count(key))                                 // HIT
-        {
-            T value = t2_map_[key]->second;
-            t2_list_.erase (t2_map_[key]);
-            t2_list_.push_front ({key, value});
-            t2_map_[key] = t2_list_.begin();
-
-            return true;
-        }
-
-        bool exist_b1 = b1_map_.count (key);                    // MISS
-        bool exist_b2 = b2_map_.count (key);
-
-        if (exist_b1)
+        if (b1_map_.count (key))
             handling_b_list (key, b1_list_, b1_map_, &ARC_t::handle_with_b1);
-        else if (exist_b2)
+        else if (b2_map_.count (key))
             handling_b_list (key, b2_list_, b2_map_, &ARC_t::handle_with_b2);
 
         T value = get_page (key);
@@ -268,11 +247,8 @@ public:
         else
         {
             int idx = 1;
-            for (auto it = t1_list_.begin(); it != t1_list_.end(); ++it)
-            {
-                const auto& node = *it;
+            for (const auto& node : t1_list_)
                 std::cout << "    " << idx++ << ". key = " << std::setw(5) << node.first << " ---> value = \"" << node.second << "\"" << std::endl;
-            }
         }
 
         std::cout << std::endl;
@@ -285,11 +261,8 @@ public:
         else
         {
             int idx = 1;
-            for (auto it = t2_list_.begin(); it != t2_list_.end(); ++it)
-            {
-                const auto& node = *it;
+            for (const auto& node : t2_list_)
                 std::cout << "    " << idx++ << ". key = " << std::setw(5) << node.first << " ---> value = \"" << node.second << "\"" << std::endl;
-            }
         }
 
         std::cout << "######## B1 (ghosts from T1, size = " << b1_size() << ")  ########" << std::endl;
@@ -300,11 +273,8 @@ public:
         else
         {
             int idx = 1;
-            for (auto it = b1_list_.begin(); it != b1_list_.end(); ++it)
-            {
-                const auto& key = *it;
+            for (const auto& key : b1_list_)
                 std::cout << "    " << idx++ << ". key = " << std::setw(5) << key << std::endl;
-            }
         }
 
 
@@ -316,11 +286,8 @@ public:
         else
         {
             int idx = 1;
-            for (auto it = b2_list_.begin(); it != b2_list_.end(); ++it)
-            {
-                const auto& key = *it;
+            for (const auto& key : b2_list_)
                 std::cout << "    " << idx++ << ". key = " << std::setw(5) << key << std::endl;
-            }
         }
 
         std::cout << "======================================================" << std::endl;
