@@ -166,6 +166,38 @@ namespace arc_cache
             control_ghost_sizes();                                  // 5. check size of ghost lists
         }
 
+
+        void dump_map (const std::string& text, size_t size, const std::list<ListNodeType>& list)
+        {
+            std::cout << "######## " << text << " (size = " << size << ") ##########" << std::endl;
+            if (list.empty())
+            {
+                std::cout << "\t\t   [empty]" << std::endl;
+            }
+            else
+            {
+                int idx = 1;
+                for (const auto& node : list)
+                    std::cout << "    " << idx++ << ". key = " << std::setw(5) << node.first
+                              << " ---> value = \"" << node.second << "\"" << std::endl;
+            }
+        }
+
+        void dump_list (const std::string& text, size_t size, const std::list<KeyT>& list)
+        {
+            std::cout << "######## " << text << " (size = " << size << ")  ########" << std::endl;
+            if (list.empty())
+            {
+                std::cout << "\t\t   [empty]" << std::endl;
+            }
+            else
+            {
+                int idx = 1;
+                for (const auto& key : list)
+                    std::cout << "    " << idx++ << ". key = " << std::setw(5) << key << std::endl;
+            }
+        }
+
     public:
         ARC_t (int size)                                             // ctor
         {
@@ -176,13 +208,15 @@ namespace arc_cache
         }
 
     // ====== Methods for completeness of the user interface =====
-        void put (const KeyT& key, T& value)
+        template <typename FuncT>
+        void put (const KeyT& key, FuncT get_page)
         {
             if (b1_map_.count (key))
                 handling_b_list (key, b1_list_, b1_map_, &ARC_t::handle_with_b1);
             else if (b2_map_.count (key))
                 handling_b_list (key, b2_list_, b2_map_, &ARC_t::handle_with_b2);
 
+            T value = get_page (key);
             put_without_ghosts_check (key, value);
         }
 
@@ -220,13 +254,7 @@ namespace arc_cache
             if (get (key))
                 return true;
 
-            if (b1_map_.count (key))
-                handling_b_list (key, b1_list_, b1_map_, &ARC_t::handle_with_b1);
-            else if (b2_map_.count (key))
-                handling_b_list (key, b2_list_, b2_map_, &ARC_t::handle_with_b2);
-
-            T value = get_page (key);
-            put_without_ghosts_check (key, value);
+            put (key, get_page);
 
             return false;
         }
@@ -240,56 +268,11 @@ namespace arc_cache
             std::cout << "Ghost items (B1 + B2): " << B_size() << std::endl;
             std::cout << std::endl;
 
-            std::cout << "######## T1 (recently used, size = " << t1_size() << ") ##########" << std::endl;
-            if (t1_list_.empty())
-            {
-                std::cout << "\t\t   [empty]" << std::endl;
-            }
-            else
-            {
-                int idx = 1;
-                for (const auto& node : t1_list_)
-                    std::cout << "    " << idx++ << ". key = " << std::setw(5) << node.first << " ---> value = \"" << node.second << "\"" << std::endl;
-            }
+            dump_map("T1 (recently used)",   t1_size(), t1_list_);
+            dump_map("T2 (frequently used)", t2_size(), t2_list_);
 
-            std::cout << std::endl;
-
-            std::cout << "######## T2 (frequently used, size = " << t2_size() << ") ########" << std::endl;
-            if (t2_list_.empty())
-            {
-                std::cout << "\t\t   [empty]" << std::endl;
-            }
-            else
-            {
-                int idx = 1;
-                for (const auto& node : t2_list_)
-                    std::cout << "    " << idx++ << ". key = " << std::setw(5) << node.first << " ---> value = \"" << node.second << "\"" << std::endl;
-            }
-
-            std::cout << "######## B1 (ghosts from T1, size = " << b1_size() << ")  ########" << std::endl;
-            if (b1_list_.empty())
-            {
-                std::cout << "\t\t   [empty]" << std::endl;
-            }
-            else
-            {
-                int idx = 1;
-                for (const auto& key : b1_list_)
-                    std::cout << "    " << idx++ << ". key = " << std::setw(5) << key << std::endl;
-            }
-
-
-            std::cout << "######## B2 (ghosts from T2, size = " << b2_size() << ")  ########" << std::endl;
-            if (b2_list_.empty())
-            {
-                std::cout << "\t\t   [empty]" << std::endl;
-            }
-            else
-            {
-                int idx = 1;
-                for (const auto& key : b2_list_)
-                    std::cout << "    " << idx++ << ". key = " << std::setw(5) << key << std::endl;
-            }
+            dump_list("B1 (ghosts from T1)", b1_size(), b1_list_);
+            dump_list("B2 (ghosts from T2)", b2_size(), b2_list_);
 
             std::cout << "======================================================" << std::endl;
         }
