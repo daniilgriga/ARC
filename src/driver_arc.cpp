@@ -6,7 +6,7 @@ int main ()
 {
     auto input_data = read_input();
 
-    ARC_t<Page_t, int> cache (input_data.cache_size);
+    arc_cache::ARC_t<Page_t, int> cache (input_data.cache_size);
 
     int hits = 0;
 
