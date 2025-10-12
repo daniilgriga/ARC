@@ -5,40 +5,29 @@
 #include <limits>
 #include <utility>
 
-struct CacheInput_t
-{
-    size_t cache_size;
-    std::vector<int> sequence;
-};
-
 template <typename T>
-T read_elem (const std::string& message)
+T read_elem (std::istream& input, const std::string& message)
 {
     T value{};
 
-    std::cin >> value;
-    if (std::cin)
-    {
-        return value;
-    }
-    else
+    while (!(input >> value))
     {
         std::cerr << message << std::endl;
         std::cin.clear();
         std::cin.ignore (std::numeric_limits<std::streamsize>::max(), '\n');
     }
 
-    return T{}; // for delete warning [-Wreturn-type]
+    return value;
 }
 
-CacheInput_t read_input ()
+std::pair<size_t, std::vector<int>> read_input ()
 {
-    size_t cache_size = read_elem<size_t> ("ERROR: incorrect input - enter a positive integer.");
-    size_t numb_elems = read_elem<size_t> ("ERROR: incorrect input - enter a positive integer.");
+    size_t cache_size = read_elem<size_t> (std::cin, "ERROR: incorrect input - enter a positive integer.");
+    size_t numb_elems = read_elem<size_t> (std::cin, "ERROR: incorrect input - enter a positive integer.");
 
     std::vector<int> sequence (numb_elems);
     for (size_t i = 0; i < numb_elems; i++)
-        sequence[i] = read_elem<int> ("ERROR: incorrect input - enter a integer.");
+        sequence[i] = read_elem<int> (std::cin, "ERROR: incorrect input - enter a integer.");
 
-    return {cache_size, std::move(sequence)};
+    return {cache_size, sequence};
 }

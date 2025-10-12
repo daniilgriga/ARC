@@ -4,13 +4,13 @@
 
 int main ()
 {
-    auto input_data = read_input();
+    auto [size, sequence] = read_input();
 
-    arc_cache::ARC_t<Page_t, int> cache (input_data.cache_size);
+    arc_cache::ARC_t<Page_t, int> cache (size);
 
     int hits = 0;
 
-    for (int key : input_data.sequence)
+    for (int key : sequence)
         if (cache.lookup_update (key, slow_get_page)) hits++;
 
     std::cout << hits << std::endl;
