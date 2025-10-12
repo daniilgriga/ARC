@@ -201,7 +201,7 @@ namespace arc_cache
     public:
         ARC_t (int size)                                             // ctor
         {
-            assert (size && "Cache size cannot be negative");
+            assert ((size > 0) && "Cache size cannot be negative");
 
             size_ = static_cast<size_t>(size);
             param_ = 0;
