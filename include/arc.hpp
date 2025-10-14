@@ -218,7 +218,7 @@ namespace arc_cache
             put_without_ghosts_check (key, value);
         }
 
-        bool get (const KeyT& key)
+        bool get (const KeyT& key) const
         {
             auto t1_iter = t1_map_.find (key);
             if (t1_iter != t1_map_.end())
@@ -254,7 +254,7 @@ namespace arc_cache
             return false;
         }
 
-        void dump ()                                                // just for visualisation of cache
+        void dump () const                                          // just for visualisation of cache
         {
             std::cout << std::endl;
             std::cout << "======================================================" << std::endl;
