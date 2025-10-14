@@ -166,24 +166,19 @@ namespace arc_cache
             control_ghost_sizes();                                  // 5. check size of ghost lists
         }
 
-
-        void dump_map (const std::string& text, size_t size, const std::list<ListNodeType>& list)
+        void dump_element (unsigned idx, const KeyT &elem)
         {
-            std::cout << "######## " << text << " (size = " << size << ") ##########" << std::endl;
-            if (list.empty())
-            {
-                std::cout << "\t\t   [empty]" << std::endl;
-            }
-            else
-            {
-                int idx = 1;
-                for (const auto& node : list)
-                    std::cout << "    " << idx++ << ". key = " << std::setw(5) << node.first
-                              << " ---> value = \"" << node.second << "\"" << std::endl;
-            }
+            std::cout << "    " << idx << ". key = " << std::setw(5) << elem << std::endl;
         }
 
-        void dump_list (const std::string& text, size_t size, const std::list<KeyT>& list)
+        void dump_element (unsigned idx, const ListNodeType &elem)
+        {
+            std::cout << "    " << idx << ". key = " << std::setw(5) << elem.first
+                      << " ---> value = \"" << elem.second << "\"" << std::endl;
+        }
+
+        template <typename ListType>
+        void dump_list (const std::string& text, size_t size, const std::list<ListType>& list)
         {
             std::cout << "######## " << text << " (size = " << size << ")  ########" << std::endl;
             if (list.empty())
@@ -192,16 +187,19 @@ namespace arc_cache
             }
             else
             {
-                int idx = 1;
-                for (const auto& key : list)
-                    std::cout << "    " << idx++ << ". key = " << std::setw(5) << key << std::endl;
+                unsigned idx = 1;
+                for (const auto& elem : list)
+                {
+                    dump_element (idx, elem);
+                    ++idx;
+                }
             }
         }
 
     public:
         ARC_t (int size)                                             // ctor
         {
-            assert ((size > 0) && "Cache size cannot be negative");
+            assert ((size > 0) && "Cache size can only be a positive number");
 
             size_ = static_cast<size_t>(size);
             param_ = 0;
@@ -248,9 +246,6 @@ namespace arc_cache
         template <typename FuncT>
         bool lookup_update (const KeyT& key, FuncT get_page)
         {
-            if (size_ == 0)
-                return false;
-
             if (get (key))
                 return true;
 
@@ -268,11 +263,11 @@ namespace arc_cache
             std::cout << "Ghost items (B1 + B2): " << B_size() << std::endl;
             std::cout << std::endl;
 
-            dump_map("T1 (recently used)",   t1_size(), t1_list_);
-            dump_map("T2 (frequently used)", t2_size(), t2_list_);
+            dump_list ("T1 (recently used)",   t1_size(), t1_list_);
+            dump_list ("T2 (frequently used)", t2_size(), t2_list_);
 
-            dump_list("B1 (ghosts from T1)", b1_size(), b1_list_);
-            dump_list("B2 (ghosts from T2)", b2_size(), b2_list_);
+            dump_list ("B1 (ghosts from T1)", b1_size(), b1_list_);
+            dump_list ("B2 (ghosts from T2)", b2_size(), b2_list_);
 
             std::cout << "======================================================" << std::endl;
         }
