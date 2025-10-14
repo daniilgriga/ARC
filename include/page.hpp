@@ -2,18 +2,21 @@
 
 #include <iostream>
 
-struct Page_t
+namespace page
 {
-    int page_id_;
-    std::string data_;
-};
+    struct Page_t
+    {
+        int page_id_;
+        std::string data_;
+    };
 
-inline std::ostream& operator<< (std::ostream& ostream, const Page_t& page)
-{
-    return ostream << "[Page " << page.page_id_ << ": " << page.data_ << "]";
-}
+    inline std::ostream& operator<< (std::ostream& ostream, const Page_t& page)
+    {
+        return ostream << "[Page " << page.page_id_ << ": " << page.data_ << "]";
+    }
 
-static Page_t slow_get_page (const int& key)
-{
-    return {key, "Page number " + std::to_string(key) + " with some data :)"};
+    inline Page_t slow_get_page (const int& key)
+    {
+        return {key, "Page number " + std::to_string(key) + " with some data :)"};
+    }
 }
