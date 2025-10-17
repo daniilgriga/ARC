@@ -12,8 +12,8 @@ namespace arc_cache
     template <typename T, typename KeyT = int>
     class ARC_t
     {
-        size_t size_;
-        size_t param_;
+        size_t size_ = 0;
+        size_t param_ = 0;
 
         using ListNodeType = typename std::pair<KeyT, T>;
         using ListIter = typename std::list<ListNodeType>::iterator;
@@ -197,12 +197,9 @@ namespace arc_cache
         }
 
     public:
-        ARC_t (int size)                                             // ctor
+        ARC_t (int size) : size_(static_cast<size_t>(size))          // ctor
         {
             assert ((size > 0) && "Cache size can only be a positive number");
-
-            size_ = static_cast<size_t>(size);
-            param_ = 0;
         }
 
     // ====== Methods for completeness of the user interface =====
@@ -218,7 +215,7 @@ namespace arc_cache
             put_without_ghosts_check (key, value);
         }
 
-        bool get (const KeyT& key) const
+        bool get (const KeyT& key)
         {
             auto t1_iter = t1_map_.find (key);
             if (t1_iter != t1_map_.end())
